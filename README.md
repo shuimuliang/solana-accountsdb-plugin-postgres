@@ -12,6 +12,8 @@ configuration file looks like the following:
 	"libpath": "/solana/target/release/libsolana_geyser_plugin_postgres.so",
 	"host": "postgres-server",
 	"user": "solana",
+  "password": "random",
+  "dbname":"solana",
 	"port": 5433,
 	"threads": 20,
 	"batch_size": 20,
@@ -22,8 +24,9 @@ configuration file looks like the following:
 }
 ```
 
-The `host`, `user`, and `port` control the PostgreSQL configuration
-information. For more advanced connection options, please use the
+The `host`, `user`, `password`, `dbname` and `port` control the PostgreSQL configuration
+information. The default schema name is **public**.
+For more advanced connection options, please use the
 `connection_str` field. Please see [Rust Postgres Configuration](https://docs.rs/postgres/0.19.2/postgres/config/struct.Config.html).
 
 To improve the throughput to the database, the plugin supports connection pooling
