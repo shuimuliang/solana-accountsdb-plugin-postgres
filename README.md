@@ -20,6 +20,9 @@ configuration file looks like the following:
 	"panic_on_db_errors": true,
 	"accounts_selector" : {
 		"accounts" : ["*"]
+	},
+	"transaction_selector" : {
+		"mentions" : ["*"]
 	}
 }
 ```
