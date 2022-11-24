@@ -34,7 +34,7 @@ impl std::fmt::Debug for GeyserPluginPostgres {
 }
 
 /// The Configuration for the PostgreSQL plugin
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct GeyserPluginPostgresConfig {
     /// The host name or IP of the PostgreSQL server
     pub host: Option<String>,
@@ -85,9 +85,10 @@ pub struct GeyserPluginPostgresConfig {
     /// Controls whetherf to index the token mints. The default is false
     pub index_token_mint: Option<bool>,
 
-    /// Controls if this plugin can read the database on_load() and find slot below that one everything should be in database
+    /// Controls if this plugin can read the database on_load() to find heighest slot
+    /// and ignore upsetr accounts (at_startup) that should already exist in DB
     #[serde(default)]
-    pub batch_optimize_by_skiping_old_slots: bool,
+    pub skip_upsert_existing_accounts_at_startup: bool,
 }
 
 #[derive(Error, Debug)]
@@ -374,7 +375,7 @@ impl GeyserPlugin for GeyserPluginPostgres {
                 )));
             }
             Some(client) => match transaction_info {
-                ReplicaTransactionInfoVersions::V0_0_1(transaction_info) => {
+                ReplicaTransactionInfoVersions::V0_0_2(transaction_info) => {
                     if let Some(transaction_selector) = &self.transaction_selector {
                         if !transaction_selector.is_transaction_selected(
                             transaction_info.is_vote,
@@ -393,6 +394,11 @@ impl GeyserPlugin for GeyserPluginPostgres {
                                 msg: format!("Failed to persist the transaction info to the PostgreSQL database. Error: {:?}", err)
                             });
                     }
+                }
+                _ => {
+                    return Err(GeyserPluginError::SlotStatusUpdateError{
+                        msg: "Failed to persist the transaction info to the PostgreSQL database. Unsupported format.".to_string()
+                    });
                 }
             },
         }

@@ -378,12 +378,12 @@ impl SimplePostgresClient {
 
         match bulk_stmt {
             Err(err) => {
-                return Err(GeyserPluginError::Custom(Box::new(GeyserPluginPostgresError::DataSchemaError {
+                Err(GeyserPluginError::Custom(Box::new(GeyserPluginPostgresError::DataSchemaError {
                     msg: format!(
                         "Error in preparing for the accounts update PostgreSQL database: {} host: {:?} user: {:?} config: {:?}",
                         err, config.host, config.user, config
                     ),
-                })));
+                })))
             }
             Ok(update_account_stmt) => Ok(update_account_stmt),
         }
@@ -403,12 +403,12 @@ impl SimplePostgresClient {
 
         match stmt {
             Err(err) => {
-                return Err(GeyserPluginError::Custom(Box::new(GeyserPluginPostgresError::DataSchemaError {
+                Err(GeyserPluginError::Custom(Box::new(GeyserPluginPostgresError::DataSchemaError {
                     msg: format!(
                         "Error in preparing for the accounts update PostgreSQL database: {} host: {:?} user: {:?} config: {:?}",
                         err, config.host, config.user, config
                     ),
-                })));
+                })))
             }
             Ok(update_account_stmt) => Ok(update_account_stmt),
         }
@@ -423,12 +423,12 @@ impl SimplePostgresClient {
 
         match statement {
             Err(err) => {
-                return Err(GeyserPluginError::Custom(Box::new(GeyserPluginPostgresError::DataSchemaError {
+                Err(GeyserPluginError::Custom(Box::new(GeyserPluginPostgresError::DataSchemaError {
                     msg: format!(
                         "Error in preparing for the statement {} for PostgreSQL database: {} host: {:?} user: {:?} config: {:?}",
                         stmt, err, config.host, config.user, config
                     ),
-                })));
+                })))
             }
             Ok(statement) => Ok(statement),
         }
@@ -445,12 +445,12 @@ impl SimplePostgresClient {
 
         match stmt {
             Err(err) => {
-                return Err(GeyserPluginError::Custom(Box::new(GeyserPluginPostgresError::DataSchemaError {
+                Err(GeyserPluginError::Custom(Box::new(GeyserPluginPostgresError::DataSchemaError {
                     msg: format!(
                         "Error in preparing for the account_audit update PostgreSQL database: {} host: {:?} user: {:?} config: {:?}",
                         err, config.host, config.user, config
                     ),
-                })));
+                })))
             }
             Ok(stmt) => Ok(stmt),
         }
@@ -468,12 +468,12 @@ impl SimplePostgresClient {
 
         match stmt {
             Err(err) => {
-                return Err(GeyserPluginError::Custom(Box::new(GeyserPluginPostgresError::DataSchemaError {
+                Err(GeyserPluginError::Custom(Box::new(GeyserPluginPostgresError::DataSchemaError {
                     msg: format!(
                         "Error in preparing for the slot update PostgreSQL database: {} host: {:?} user: {:?} config: {:?}",
                         err, config.host, config.user, config
                     ),
-                })));
+                })))
             }
             Ok(stmt) => Ok(stmt),
         }
@@ -491,12 +491,12 @@ impl SimplePostgresClient {
 
         match stmt {
             Err(err) => {
-                return Err(GeyserPluginError::Custom(Box::new(GeyserPluginPostgresError::DataSchemaError {
+                Err(GeyserPluginError::Custom(Box::new(GeyserPluginPostgresError::DataSchemaError {
                     msg: format!(
                         "Error in preparing for the slot update PostgreSQL database: {} host: {:?} user: {:?} config: {:?}",
                         err, config.host, config.user, config
                     ),
-                })));
+                })))
             }
             Ok(stmt) => Ok(stmt),
         }
@@ -1282,24 +1282,24 @@ impl PostgresClientBuilder {
     pub fn build_pararallel_postgres_client(
         config: &GeyserPluginPostgresConfig,
     ) -> Result<(ParallelPostgresClient, Option<u64>), GeyserPluginError> {
-        let batch_optimize_by_skiping_older_slots = match config.batch_optimize_by_skiping_old_slots
-        {
-            true => {
-                let mut on_load_client = SimplePostgresClient::new(config)?;
+        let batch_optimize_by_skiping_older_slots =
+            match config.skip_upsert_existing_accounts_at_startup {
+                true => {
+                    let mut on_load_client = SimplePostgresClient::new(config)?;
 
-                // database if populated concurrently so we need to move some number of slots
-                // below highest available slot to make sure we do not skip anything that was already in DB.
-                let batch_slot_bound = on_load_client
-                    .get_highest_available_slot()?
-                    .saturating_sub(SAFE_BATCH_STARTING_SLOT_CUSHION);
-                info!(
-                    "Set batch_optimize_by_skiping_older_slots to {}",
-                    batch_slot_bound
-                );
-                Some(batch_slot_bound)
-            }
-            false => None,
-        };
+                    // database if populated concurrently so we need to move some number of slots
+                    // below highest available slot to make sure we do not skip anything that was already in DB.
+                    let batch_slot_bound = on_load_client
+                        .get_highest_available_slot()?
+                        .saturating_sub(SAFE_BATCH_STARTING_SLOT_CUSHION);
+                    info!(
+                        "Set batch_optimize_by_skiping_older_slots to {}",
+                        batch_slot_bound
+                    );
+                    Some(batch_slot_bound)
+                }
+                false => None,
+            };
 
         ParallelPostgresClient::new(config).map(|v| (v, batch_optimize_by_skiping_older_slots))
     }
